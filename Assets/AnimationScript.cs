@@ -14,8 +14,11 @@ public class AnimationScript : MonoBehaviour
 
 
     [Header("Body Parts")]
+    public Transform TopRightLeg;
     public Transform RightLeg;
     public Transform RightLegMid;
+    [Space(10)]
+    public Transform TopLeftLeg;
     public Transform LeftLeg;
     public Transform LeftLegMid;
 
@@ -40,8 +43,15 @@ public class AnimationScript : MonoBehaviour
     public bool UpdateLeftMid;
 
 
-    [Header("Testing")]
+    [Header("TestingLeft")]
     public Transform FinalPoint;
+    public Transform destinationTopLeg;
+    public Transform originalTopLeg;
+
+    [Header("TestingRight")]
+    public Transform FinalPointRight;
+    public Transform destinationTopLegRight;
+    public Transform originalTopLegRight;
 
     int currentIndex = 0;
 
@@ -59,6 +69,12 @@ public class AnimationScript : MonoBehaviour
         sMeshRendererFace.SetBlendShapeWeight(4, 100);
     }
 
+    private float Timewait = 0.5f;
+    private float SecondSwitch = 1.0f;
+    private float secondInitial = 0.0f;
+    private float initialTimeLeg = 0.0f;
+    int state = 0;
+
     private void Update()
     {
         if (startTiming)
@@ -67,11 +83,42 @@ public class AnimationScript : MonoBehaviour
             sMeshRendererFace.SetBlendShapeWeight(currentIndex, blendFade);
         }
 
-        LegMoveSequenceUp(LeftLeg, LeftLegAngleRotateMin, LeftLegAngleRotateMax, Time.deltaTime * bodySpeed);
+        if(secondInitial > SecondSwitch)
+        {
+            state = 1 - state;
+            secondInitial = 0;
+            initialTimeLeg = 0;
+        }
 
-       // LegMoveSequence(LeftLeg, LeftLegAngleRotateMin, LeftLegAngleRotateMax, Time.deltaTime * bodySpeed);
-        LegMoveSequence(LeftLegMid, LeftLegMidAngleRotateMin, LeftLegMidAngleRotateMax, Time.deltaTime * bodySpeed);
-       
+        secondInitial += Time.deltaTime;
+
+        switch (state)
+        {
+            case 0:
+
+                LegMoveSequenceUp(LeftLeg, LeftLegAngleRotateMin, LeftLegAngleRotateMax, Time.deltaTime * bodySpeed);
+                LegMoveSequence(LeftLegMid, LeftLegMidAngleRotateMin, LeftLegMidAngleRotateMax, Time.deltaTime * bodySpeed);
+
+                RightMoveSequenceUp(RightLegMid, LeftLegAngleRotateMax, LeftLegAngleRotateMin, Time.deltaTime * bodySpeed);
+                RightMoveSequence(RightLeg, LeftLegAngleRotateMax, LeftLegAngleRotateMin, Time.deltaTime * bodySpeed);
+
+
+                if (initialTimeLeg > Timewait)
+                {
+                    TopLegMoveSequence(TopLeftLeg, LeftLegMidAngleRotateMin, LeftLegMidAngleRotateMin, Time.deltaTime * bodySpeed);
+                }
+
+                initialTimeLeg += Time.deltaTime;
+                break;
+            case 1:
+                LegMoveSequence(LeftLegMid, LeftLegMidAngleRotateMax, LeftLegMidAngleRotateMin, Time.deltaTime * bodySpeed);
+                TopLegMoveSequenceReverse(TopLeftLeg, LeftLegAngleRotateMax, LeftLegAngleRotateMin, Time.deltaTime * bodySpeed);
+                
+                initialTimeLeg += Time.deltaTime;
+                break;
+        }
+
+        
 
         LegUpdateTimer();
     }
@@ -102,12 +149,25 @@ public class AnimationScript : MonoBehaviour
 
     }
 
+    public void RightMoveSequenceUp(Transform Leg, float AngleMin, float AngleMax, float deltaTime)
+    {
+        // Leg.transform.rotation = Vector3.Lerp(new Quaternion.Euler(AngleMax, 0, 0), new Vector3(AngleMax, 0, 0), deltaTime);
+        // Leg.transform.localRotation =  Quaternion.Lerp(Quaternion.Euler(AngleMin, Leg.transform.localRotation.y, Leg.transform.localRotation.z),Quaternion.Euler(AngleMax, Leg.transform.rotation.y, Leg.transform.rotation.z), deltaTime);
+        // Leg.transform.localRotation = Quaternion.Lerp(Leg.transform.localRotation, FinalPoint.localRotation, deltaTime);
+        Leg.transform.localRotation = Quaternion.Lerp(Leg.transform.localRotation, FinalPointRight.localRotation, deltaTime);
+    }
+
     public void LegMoveSequenceUp(Transform Leg, float AngleMin, float AngleMax, float deltaTime)
     {
         // Leg.transform.rotation = Vector3.Lerp(new Quaternion.Euler(AngleMax, 0, 0), new Vector3(AngleMax, 0, 0), deltaTime);
         // Leg.transform.localRotation =  Quaternion.Lerp(Quaternion.Euler(AngleMin, Leg.transform.localRotation.y, Leg.transform.localRotation.z),Quaternion.Euler(AngleMax, Leg.transform.rotation.y, Leg.transform.rotation.z), deltaTime);
         // Leg.transform.localRotation = Quaternion.Lerp(Leg.transform.localRotation, FinalPoint.localRotation, deltaTime);
         Leg.transform.localRotation = Quaternion.Lerp(Leg.transform.localRotation, FinalPoint.localRotation, deltaTime);
+    }
+
+    public void RightMoveSequence(Transform Leg, float AngleMin, float AngleMax, float deltaTime)
+    {
+        Leg.transform.localRotation = Quaternion.Lerp(Leg.transform.localRotation, destinationTopLegRight.localRotation, deltaTime);
     }
 
 
@@ -118,5 +178,24 @@ public class AnimationScript : MonoBehaviour
         // Leg.transform.localRotation = Quaternion.Lerp(Leg.transform.localRotation, FinalPoint.localRotation, deltaTime);
         Leg.transform.localRotation = Quaternion.Lerp(Leg.transform.localRotation, Quaternion.Euler(AngleMax, Leg.localRotation.y, Leg.localRotation.z), deltaTime);
     }
-    
+
+
+    public void TopLegMoveSequence(Transform Leg, float AngleMin, float AngleMax, float deltaTime)
+    {
+        // Leg.transform.rotation = Vector3.Lerp(new Quaternion.Euler(AngleMax, 0, 0), new Vector3(AngleMax, 0, 0), deltaTime);
+        // Leg.transform.localRotation =  Quaternion.Lerp(Quaternion.Euler(AngleMin, Leg.transform.localRotation.y, Leg.transform.localRotation.z),Quaternion.Euler(AngleMax, Leg.transform.rotation.y, Leg.transform.rotation.z), deltaTime);
+        // Leg.transform.localRotation = Quaternion.Lerp(Leg.transform.localRotation, FinalPoint.localRotation, deltaTime);
+        Leg.transform.localRotation = Quaternion.Lerp(Leg.transform.localRotation, destinationTopLeg.localRotation, deltaTime);
+    }
+
+
+    // reverse top movements
+
+    public void TopLegMoveSequenceReverse(Transform Leg, float AngleMin, float AngleMax, float deltaTime)
+    {
+        // Leg.transform.rotation = Vector3.Lerp(new Quaternion.Euler(AngleMax, 0, 0), new Vector3(AngleMax, 0, 0), deltaTime);
+        // Leg.transform.localRotation =  Quaternion.Lerp(Quaternion.Euler(AngleMin, Leg.transform.localRotation.y, Leg.transform.localRotation.z),Quaternion.Euler(AngleMax, Leg.transform.rotation.y, Leg.transform.rotation.z), deltaTime);
+        // Leg.transform.localRotation = Quaternion.Lerp(Leg.transform.localRotation, FinalPoint.localRotation, deltaTime);
+        Leg.transform.localRotation = Quaternion.Lerp(Leg.transform.localRotation, originalTopLeg.localRotation, deltaTime);
+    }
 }
